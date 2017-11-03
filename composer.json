@@ -9,7 +9,8 @@
     "doctrine/annotations": "^1.4",
     "php-di/phpdoc-reader": "^2.0",
     "monolog/monolog": "^1.23",
-    "vlucas/phpdotenv": "^2.4"
+    "vlucas/phpdotenv": "^2.4",
+    "psr/http-message": "^1.0"
   },
   "autoload": {
     "classmap": [
@@ -22,6 +23,11 @@
       "src/Helper/Functions.php"
     ]
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Swoft\\Test\\": "test"
+    }
+  },
   "repositories": {
     "packagist": {
       "type": "composer",
@@ -29,6 +35,7 @@
     }
   },
   "require-dev": {
-    "eaglewu/swoole-ide-helper": "dev-master"
+    "eaglewu/swoole-ide-helper": "dev-master",
+    "phpunit/phpunit": "^5.7"
   }
 }
