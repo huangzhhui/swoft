@@ -3,15 +3,13 @@ services:
     swoft:
         image: swoft/swoft:latest
         container_name: swoft
-        restart: always
         environment:
             - HTTP_HOST=0.0.0.0
         volumes:
-            - /var/www/experiment/swoft:/var/www/swoft
+            - ./:/var/www/swoft
         ports:
             - 8030:80
         networks:
             - swoftnet
-        command: php /var/www/swoft/bin/swoft start
 networks:
     swoftnet:

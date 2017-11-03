@@ -1,0 +1,8 @@
+version: '2'
+services:
+    swoft-unittest:
+        image: swoft/swoft:latest
+        container_name: swoft-unittest
+        volumes:
+            - ../:/var/www/swoft
+        command: /var/www/swoft/vendor/bin/phpunit --bootstrap /var/www/swoft/test/bootstrap.php --verbose /var/www/swoft/test/
