@@ -1,7 +1,7 @@
 version: '2'
 services:
     swoft-unittest:
-        image: swoft/swoft:latest
+        build: ./
         container_name: swoft-unittest
         volumes:
             - ../:/var/www/swoft
