@@ -2,7 +2,7 @@
 
 namespace Swoft\Filter;
 
-use Swoft\Web\Request;
+use Swoft\Web\ServerRequest;
 use Swoft\Web\Response;
 
 /**
@@ -29,20 +29,23 @@ class FilterChain implements IFilter
     /**
      * 执行过滤器
      *
-     * @param Request     $request      请求Request
-     * @param Response    $response     响应Response
-     * @param FilterChain $filterChain  过滤连
-     * @param int         $currentIndex 当前执行过滤器的index,默认数组一样0开始
-     *
+     * @param ServerRequest $request 请求Request
+     * @param Response $response 响应Response
+     * @param FilterChain $filterChain 过滤连
+     * @param int $currentIndex 当前执行过滤器的index,默认数组一样0开始
      * @return bool 返回是否处理成功，成功执行逻辑，失败，filter里面实现逻辑数据显示
      */
-    public function doFilter(Request $request, Response $response, FilterChain $filterChain, int $currentIndex = 0)
-    {
+    public function doFilter(
+        ServerRequest $request,
+        Response $response,
+        FilterChain $filterChain,
+        int $currentIndex = 0
+    ) {
         if (empty($this->filters) || count($this->filters) < $currentIndex + 1) {
             return true;
         }
 
-        $uri = $request->getRequestUri();
+        $uri = $request->getUri()->getPath();
         $filterAry = $this->getCurrentFilter($uri, $currentIndex);
         if (empty($filterAry)) {
             return true;
@@ -58,14 +61,13 @@ class FilterChain implements IFilter
     /**
      * 获取当前符合条件匹配的filter
      *
-     * @param string $uri          请求uri地址
-     * @param int    $currentIndex 过滤器当前index
-     *
+     * @param string $uri 请求uri地址
+     * @param int $currentIndex 过滤器当前index
      * @return array 返回一个数组，包含filter和index
      */
     private function getCurrentFilter(string $uri, int $currentIndex)
     {
-        if (!isset($this->filters[$currentIndex])) {
+        if (! isset($this->filters[$currentIndex])) {
             return array();
         }
 
@@ -84,10 +86,10 @@ class FilterChain implements IFilter
     /**
      * filter过滤失败逻辑
      *
-     * @param Request  $request
+     * @param ServerRequest $request
      * @param Response $response
      */
-    public function denyFilter(Request $request, Response $response)
+    public function denyFilter(ServerRequest $request, Response $response)
     {
     }
 }

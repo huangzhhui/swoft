@@ -47,7 +47,7 @@ class Application extends \Swoft\Base\Application
 
         $swfRequest = RequestContext::getRequest();
         // 解析URI和method
-        $uri = $swfRequest->getRequestUri();
+        $uri = $swfRequest->getUri()->getPath();
         $method = $swfRequest->getMethod();
 
         // 运行controller

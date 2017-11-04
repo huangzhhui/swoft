@@ -4,7 +4,7 @@ namespace App\Beans\Filters;
 
 use Swoft\Filter\Filter;
 use Swoft\Filter\FilterChain;
-use Swoft\Web\Request;
+use Swoft\Web\ServerRequest;
 use Swoft\Web\Response;
 
 /**
@@ -19,7 +19,7 @@ use Swoft\Web\Response;
 class CommonParamsFilter extends Filter
 {
 
-    public function doFilter(Request $request, Response $response, FilterChain $filterChain, int $currentIndex = 0)
+    public function doFilter(ServerRequest $request, Response $response, FilterChain $filterChain, int $currentIndex = 0)
     {
         // 过滤验证
         $result = true;
@@ -31,7 +31,7 @@ class CommonParamsFilter extends Filter
         return false;
     }
 
-    public function denyFilter(Request $request, Response $response)
+    public function denyFilter(ServerRequest $request, Response $response)
     {
         $response->setResponseContent(json_encode(array('status' => 403, 'msg' => 'common check errro!')));
         $response->setFormat(Response::FORMAT_JSON);

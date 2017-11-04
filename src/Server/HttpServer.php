@@ -63,6 +63,10 @@ class HttpServer extends RpcServer
      */
     public function onRequest(Request $request, Response $response)
     {
-        App::getApplication()->doRequest($request, $response);
+        try {
+            App::getApplication()->doRequest($request, $response);
+        } catch (\Throwable $e) {
+            print_r($e->getMessage() . PHP_EOL . $e->getTraceAsString());
+        }
     }
 }

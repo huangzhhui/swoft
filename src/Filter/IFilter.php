@@ -2,7 +2,7 @@
 
 namespace Swoft\Filter;
 
-use Swoft\Web\Request;
+use Swoft\Web\ServerRequest;
 use Swoft\Web\Response;
 
 /**
@@ -19,20 +19,20 @@ interface IFilter
     /**
      * 过滤实际逻辑处理
      *
-     * @param Request     $request
+     * @param ServerRequest     $request
      * @param Response    $response
      * @param FilterChain $filterChain
      * @param int         $currentIndex
      *
      * @return bool
      */
-    public function doFilter(Request $request, Response $response, FilterChain $filterChain, int $currentIndex = 0);
+    public function doFilter(ServerRequest $request, Response $response, FilterChain $filterChain, int $currentIndex = 0);
 
     /**
      * 未能通过过滤，逻辑处理
      *
-     * @param Request  $request
+     * @param ServerRequest  $request
      * @param Response $response
      */
-    public function denyFilter(Request $request, Response $response);
+    public function denyFilter(ServerRequest $request, Response $response);
 }

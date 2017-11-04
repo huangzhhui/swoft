@@ -4,7 +4,7 @@ namespace App\Beans\Filters;
 
 use Swoft\Filter\Filter;
 use Swoft\Filter\FilterChain;
-use Swoft\Web\Request;
+use Swoft\Web\ServerRequest;
 use Swoft\Web\Response;
 
 /**
@@ -18,7 +18,7 @@ use Swoft\Web\Response;
  */
 class LoginFilter extends Filter
 {
-    public function doFilter(Request $request, Response $response, FilterChain $filterChain, int $currentIndex = 0)
+    public function doFilter(ServerRequest $request, Response $response, FilterChain $filterChain, int $currentIndex = 0)
     {
         $uid = $request->getParameter('uid');
         if ($uid != 6) {
@@ -28,7 +28,7 @@ class LoginFilter extends Filter
         return $filterChain->doFilter($request, $response, $filterChain, $currentIndex);
     }
 
-    public function denyFilter(Request $request, Response $response)
+    public function denyFilter(ServerRequest $request, Response $response)
     {
         $response->setResponseContent(json_encode(array('status' => 403, 'msg' => 'need login!')));
         $response->setFormat(Response::FORMAT_JSON);
