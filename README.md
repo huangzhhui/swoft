@@ -25,6 +25,7 @@ Swoft 是基于 Swoole 2.x 的高性能 PHP 微服务框架，内置 HTTP 服务
 - RPC、Redis、HTTP、Mysql 协程和同步客户端无缝切换
 - Inotify 自动 Reload
 - 强大的日志系统
+- Crontab 定时任务
 
 # 更新记录
 
@@ -72,8 +73,7 @@ QQ交流群:548173319
 
 ### Docker 安装
 
-* Linux: `docker run -p 80:80 swoft/swoft`
-* Windows: `winpty docker run -p 80:80 swoft/swoft`
+* `docker run -p 80:80 swoft/swoft`
 
 ## 配置
 
