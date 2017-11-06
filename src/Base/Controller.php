@@ -3,6 +3,7 @@
 namespace Swoft\Base;
 
 use Swoft\App;
+use Swoft\Helper\ArrayHelper;
 
 /**
  * 基类控制器
@@ -28,9 +29,8 @@ class Controller
     /**
      * 执行action
      *
-     * @param string $actionId  action ID
-     * @param array  $params    action调用参数
-     *
+     * @param string $actionId action ID
+     * @param array  $params   action调用参数
      * @return \Swoft\Web\Response 返回response对象
      */
     public function run(string $actionId, array $params = []): \Swoft\Web\Response
@@ -39,8 +39,38 @@ class Controller
             $actionId = $this->defaultAction;
         }
         $response = $this->runAction($actionId, $params);
-        if (!($response instanceof \Swoft\Web\Response)) {
+        if (! $response instanceof Response) {
+            // Detect result of controller and transfer to a Standard Response object
+            $accpet = RequestContext::getRequest()->getHeader('accept');
+            $response = $this->transferResultToResponse($response, $accpet);
+        }
+        if (! ($response instanceof \Swoft\Web\Response)) {
             $response = RequestContext::getResponse();
+        }
+        return $response;
+    }
+
+    /**
+     * @param mixed $result
+     * @param array $accepts
+     * @return Response
+     */
+    private function transferResultToResponse($result, $accepts = ['*/*'])
+    {
+        $acceptAnything = '*/*';
+        $acceptJson = 'application/json';
+        switch ($result) {
+            case is_string($result) && in_array($acceptJson, $accepts):
+                break;
+            case is_array($result):
+                if (in_array($acceptAnything, $accepts) || in_array($acceptJson, $accepts)) {
+                    $response = RequestContext::getResponse();
+                    $response->setFormat('json')->setResponseContent(json_encode($result));
+                }
+                break;
+            default:
+                $response = RequestContext::getResponse();
+                break;
         }
         return $response;
     }
@@ -48,9 +78,8 @@ class Controller
     /**
      * 执行action
      *
-     * @param string $actionId  action ID
-     * @param array  $params    action调用参数
-     *
+     * @param string $actionId action ID
+     * @param array  $params   action调用参数
      * @return \Swoft\Web\Response 返回response对象
      */
     public function runAction(string $actionId, array $params = [])
@@ -61,9 +90,8 @@ class Controller
     /**
      * 参数运行action
      *
-     * @param string $actionId  action ID
-     * @param array  $params    action调用参数
-     *
+     * @param string $actionId action ID
+     * @param array  $params   action调用参数
      * @return \Swoft\Web\Response 返回response对象
      */
     public function runActionWithParams(string $actionId, array $params = [])
@@ -73,7 +101,7 @@ class Controller
         // before action
         $this->beforeAction($actionId, $params);
 
-        /* @var \Swoft\Web\Response|null $response*/
+        /* @var \Swoft\Web\Response|null $response */
         $response = $this->$methodName(...$params);
 
         // after action
@@ -86,16 +114,15 @@ class Controller
      * action方法名称
      *
      * @param string $actionId action ID
-     *
      * @return string
      */
     public function getMethodName(string $actionId)
     {
-        $methodName = $this->actionPrefix.ucfirst($actionId);
+        $methodName = $this->actionPrefix . ucfirst($actionId);
 
-        if (!method_exists($this, $methodName)) {
-            App::error("控制器执行action方法不存在，method=".$methodName);
-            throw new \BadMethodCallException("控制器执行action方法不存在，method=".$methodName);
+        if (! method_exists($this, $methodName)) {
+            App::error("控制器执行action方法不存在，method=" . $methodName);
+            throw new \BadMethodCallException("控制器执行action方法不存在，method=" . $methodName);
         }
         return $methodName;
     }
@@ -103,8 +130,8 @@ class Controller
     /**
      * action之前
      *
-     * @param string $actionId  action ID
-     * @param array  $params    action调用参数
+     * @param string $actionId action ID
+     * @param array  $params   action调用参数
      */
     protected function beforeAction(string $actionId, array $params = [])
     {
@@ -113,8 +140,8 @@ class Controller
     /**
      * action之后
      *
-     * @param string $actionId  action ID
-     * @param array  $params    action调用参数
+     * @param string $actionId action ID
+     * @param array  $params   action调用参数
      */
     protected function afterAction(string $actionId, array $params = [])
     {
@@ -123,54 +150,37 @@ class Controller
     /**
      * get方法参数，等同$_GET
      *
-     * @param string $name      默认为空，返回所有GEG参数
-     * @param mixed  $default   name不为空是有效
-     *
+     * @param string $name    默认为空，返回所有GEG参数
+     * @param mixed  $default name不为空是有效
      * @return mixed
      */
     protected function get($name = '', $default = null)
     {
-        if (!empty($name)) {
-            return App::getRequest()->getParameter($name, $default);
+        if (! empty($name)) {
+            return App::getRequest()->getQueryParameter($name, $default);
         }
-        return App::getRequest()->getGetParameters();
+        return App::getRequest()->getQueryParams();
     }
 
     /**
      * get方法参数，等同$_GET
      *
-     * @param string $name      默认为空，返回所有GEG参数
-     * @param mixed  $default   name不为空是有效
-     *
+     * @param string $name    默认为空，返回所有GEG参数
+     * @param mixed  $default name不为空是有效
      * @return mixed
      */
     protected function post($name = '', $default = null)
     {
-        if (!empty($name)) {
-            return App::getRequest()->getParameter($name, $default);
+        if (! empty($name)) {
+            return App::getRequest()->getPostParameter($name, $default);
         }
         return App::getRequest()->getPostParameters();
     }
 
     /**
-     * 请求参数，等同$_REQUEST
-     *
-     * @param string $name      默认为空，返回所有GEG参数
-     * @param mixed  $default   name不为空是有效
-     *
-     * @return mixed
-     */
-    protected function request($name = '', $default = null)
-    {
-        if (!empty($name)) {
-            return App::getRequest()->getParameter($name, $default);
-        }
-        return App::getRequest()->getParameters();
-    }
-
-    /**
      * 重定向
-     * @param string $url
+     *
+     * @param string   $url
      * @param null|int $status
      * @return Response
      */

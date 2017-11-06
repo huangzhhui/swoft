@@ -38,7 +38,7 @@ class RequestContext
     /**
      * 请求request
      *
-     * @return \Swoft\Web\ServerRequest
+     * @return \Swoft\Web\Request
      */
     public static function getRequest()
     {
@@ -75,7 +75,7 @@ class RequestContext
     {
         $coroutineId = self::getcoroutineId();
         // self::$coroutineLocal[$coroutineId][self::COROUTINE_REQUEST] = new \Swoft\Web\Request($request);
-        self::$coroutineLocal[$coroutineId][self::COROUTINE_REQUEST] = \Swoft\Web\ServerRequest::loadFromSwooleRequest($request);
+        self::$coroutineLocal[$coroutineId][self::COROUTINE_REQUEST] = \Swoft\Web\Request::loadFromSwooleRequest($request);
     }
 
     /**

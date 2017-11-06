@@ -22,35 +22,78 @@ class Uri implements UriInterface
      */
     const DEFAULT_HTTP_HOST = 'localhost';
 
+    /**
+     * @var array
+     */
     private static $defaultPorts = [
         'http' => 80,
         'https' => 443,
     ];
 
+    /**
+     * @var string
+     */
     private static $charUnreserved = 'a-zA-Z0-9_\-\.~';
+
+    /**
+     * @var string
+     */
     private static $charSubDelims = '!\$&\'\(\)\*\+,;=';
+
+    /**
+     * @var array
+     */
     private static $replaceQuery = ['=' => '%3D', '&' => '%26'];
 
-    /** @var string Uri scheme. */
+    /**
+     * @var string Uri scheme.
+     */
     private $scheme = '';
 
-    /** @var string Uri user info. */
+    /**
+     * @var string Uri user info.
+     */
     private $userInfo = '';
 
-    /** @var string Uri host. */
+    /**
+     * @var string Uri host.
+     */
     private $host = '';
 
-    /** @var int|null Uri port. */
+    /**
+     * @var int|null Uri port.
+     */
     private $port;
 
-    /** @var string Uri path. */
+    /**
+     * @var string Uri path.
+     */
     private $path = '';
 
-    /** @var string Uri query string. */
+    /**
+     * @var string Uri query string.
+     */
     private $query = '';
 
-    /** @var string Uri fragment. */
+    /**
+     * @var string Uri fragment.
+     */
     private $fragment = '';
+
+    /**
+     * @param string $uri URI to parse
+     */
+    public function __construct($uri = '')
+    {
+        // weak type check to also accept null until we can add scalar type hints
+        if ($uri != '') {
+            $parts = parse_url($uri);
+            if ($parts === false) {
+                throw new \InvalidArgumentException("Unable to parse URI: $uri");
+            }
+            $this->applyParts($parts);
+        }
+    }
 
     /**
      * Retrieve the scheme component of the URI.
@@ -241,7 +284,7 @@ class Uri implements UriInterface
      * user; an empty string for the user is equivalent to removing user
      * information.
      *
-     * @param string $user The user name to use for authority.
+     * @param string      $user     The user name to use for authority.
      * @param null|string $password The password associated with $user.
      * @return static A new instance with the specified user information.
      */
@@ -291,7 +334,7 @@ class Uri implements UriInterface
      * information.
      *
      * @param null|int $port The port to use with the new instance; a null value
-     *     removes the port information.
+     *                       removes the port information.
      * @return static A new instance with the specified port.
      * @throws \InvalidArgumentException for invalid ports.
      */
@@ -358,6 +401,45 @@ class Uri implements UriInterface
         $clone = clone $this;
         $clone->query = $query;
         return $clone;
+    }
+
+    /**
+     * Creates a new URI with a specific query string value.
+     * Any existing query string values that exactly match the provided key are
+     * removed and replaced with the given key value pair.
+     * A value of null will set the query string key without a value, e.g. "key"
+     * instead of "key=value".
+     *
+     * @param UriInterface $uri   URI to use as a base.
+     * @param string       $key   Key to set.
+     * @param string|null  $value Value to set
+     * @return UriInterface
+     */
+    public static function withQueryValue(UriInterface $uri, $key, $value)
+    {
+        $current = $uri->getQuery();
+
+        if ($current === '') {
+            $result = [];
+        } else {
+            $decodedKey = rawurldecode($key);
+            $result = array_filter(explode('&', $current), function ($part) use ($decodedKey) {
+                return rawurldecode(explode('=', $part)[0]) !== $decodedKey;
+            });
+        }
+
+        // Query string separators ("=", "&") within the key or value need to be encoded
+        // (while preventing double-encoding) before setting the query string. All other
+        // chars that need percent-encoding will be encoded by withQuery().
+        $key = strtr($key, self::$replaceQuery);
+
+        if ($value !== null) {
+            $result[] = $key . '=' . strtr($value, self::$replaceQuery);
+        } else {
+            $result[] = $key;
+        }
+
+        return $uri->withQuery(implode('&', $result));
     }
 
     /**

@@ -39,8 +39,6 @@ abstract class Application
      */
     protected $useProvider = false;
 
-    public $count = 0;
-
     /**
      * 初始化
      */

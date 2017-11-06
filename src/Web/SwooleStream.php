@@ -22,16 +22,17 @@ class SwooleStream implements StreamInterface
     /**
      * @var string
      */
-    protected $length;
+    protected $size;
 
     /**
      * SwooleStream constructor.
      *
-     * @param \Swoole\Http\Request $swooleRequest
+     * @param string $contents
      */
-    public function __construct(\Swoole\Http\Request $swooleRequest)
+    public function __construct($contents = '')
     {
-        $this->contents = $swooleRequest->rawContent();
+        $this->contents = $contents;
+        $this->size = strlen($this->contents);
     }
 
     /**
@@ -82,10 +83,10 @@ class SwooleStream implements StreamInterface
      */
     public function getSize()
     {
-        if (! $this->length) {
-            $this->length = strlen($this->getContents());
+        if (! $this->size) {
+            $this->size = strlen($this->getContents());
         }
-        return $this->length;
+        return $this->size;
     }
 
     /**

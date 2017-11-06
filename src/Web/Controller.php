@@ -12,9 +12,9 @@ use Swoft\Helper\ResponseHelper;
  * 控制器
  *
  * @uses      Controller
- * @version   2017年04月30日
- * @author    stelin <phpcrazy@126.com>
- * @copyright Copyright 2010-2016 Swoft software
+ * @version   2017年11月05日
+ * @author    huangzhhui <huangzhwork@gmail.com>
+ * @copyright Copyright 2010-2017 Swoft software
  * @license   PHP Version 7.x {@link http://www.php.net/license/3_0.txt}
  */
 class Controller extends \Swoft\Base\Controller
@@ -22,21 +22,29 @@ class Controller extends \Swoft\Base\Controller
     use ViewRendererTrait;
 
     /**
-     * alias of the `outputJson()`
-     * @see Controller::outputJson()
-     * {@inheritdoc}
+     * @return \Swoft\Web\Request
      */
-    public function renderJson($data = '', $message = '', $status = 200)
+    public function request(): Request
     {
-        $this->outputJson($data, $message, $status);
+        return App::getRequest();
+    }
+
+    /**
+     * @return \Swoft\Web\Response
+     */
+    public function response(): Response
+    {
+        return App::getResponse();
     }
 
     /**
      * json格式输出
      *
-     * @param mixed  $data      数据
-     * @param string $message   文案
-     * @param int    $status    状态，200成功，非200失败
+     * @param mixed  $data    数据
+     * @param string $message 文案
+     * @param int    $status  状态，200成功，非200失败
+     * @deprecated 非标准输出
+     * @return \Swoft\Web\Response
      */
     public function outputJson($data = '', $message = '', $status = 200)
     {
@@ -46,27 +54,12 @@ class Controller extends \Swoft\Base\Controller
         $response = RequestContext::getResponse();
         $response->setFormat(Response::FORMAT_JSON);
         $response->setResponseContent($json);
-    }
-
-    /**
-     * 模板文件路径检查
-     *
-     * @param string $viewsPath     模板路径
-     * @param string $templateId    模板ID
-     *
-     * @throws \InvalidArgumentException
-     */
-    private function checkTemplateFile(string $viewsPath, string $templateId)
-    {
-        $file = $viewsPath.$templateId;
-        if (!file_exists($file)) {
-            App::error($file."模板文件不存在");
-            throw new \InvalidArgumentException($file."模板文件不存在");
-        }
+        return $response;
     }
 
     /**
      * getRenderer
+     *
      * @return ViewRenderer
      */
     public function getRenderer()

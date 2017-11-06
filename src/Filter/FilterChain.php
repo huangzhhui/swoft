@@ -2,7 +2,7 @@
 
 namespace Swoft\Filter;
 
-use Swoft\Web\ServerRequest;
+use Swoft\Web\Request;
 use Swoft\Web\Response;
 
 /**
@@ -29,14 +29,14 @@ class FilterChain implements IFilter
     /**
      * 执行过滤器
      *
-     * @param ServerRequest $request 请求Request
-     * @param Response $response 响应Response
-     * @param FilterChain $filterChain 过滤连
-     * @param int $currentIndex 当前执行过滤器的index,默认数组一样0开始
+     * @param Request     $request      请求Request
+     * @param Response    $response     响应Response
+     * @param FilterChain $filterChain  过滤连
+     * @param int         $currentIndex 当前执行过滤器的index,默认数组一样0开始
      * @return bool 返回是否处理成功，成功执行逻辑，失败，filter里面实现逻辑数据显示
      */
     public function doFilter(
-        ServerRequest $request,
+        Request $request,
         Response $response,
         FilterChain $filterChain,
         int $currentIndex = 0
@@ -86,10 +86,10 @@ class FilterChain implements IFilter
     /**
      * filter过滤失败逻辑
      *
-     * @param ServerRequest $request
+     * @param Request  $request
      * @param Response $response
      */
-    public function denyFilter(ServerRequest $request, Response $response)
+    public function denyFilter(Request $request, Response $response)
     {
     }
 }

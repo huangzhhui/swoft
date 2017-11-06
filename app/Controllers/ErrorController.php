@@ -8,8 +8,8 @@ use Swoft\Web\Controller;
 
 /**
  * 错误控制器
- *
  * @AutoController()
+ *
  * @uses      ErrorController
  * @version   2017年08月08日
  * @author    stelin <phpcrazy@126.com>
@@ -27,11 +27,11 @@ class ErrorController extends Controller
         $exception = $response->getException();
 
         $status = $exception->getCode();
-        $message  = $exception->getMessage();
+        $message = $exception->getMessage();
         $line = $exception->getLine();
         $file = $exception->getFile();
 
-        $message .= " ".$file." ".$line;
+        $message .= " " . $file . " " . $line;
         $this->outputJson("error", $message, $status);
     }
 }

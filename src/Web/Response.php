@@ -17,16 +17,30 @@ class Response extends \Swoft\Base\Response
     const FORMAT_JSON = 'json';
     const FORMAT_XML = 'xml';
 
-    private $status = 200;
-    private $charset = "utf-8";
-    private $responseContent = "";
-    private $format = self::FORMAT_HTML;
+    /**
+     * @var int
+     */
+    protected $status = 200;
+
+    /**
+     * @var string
+     */
+    protected $charset = "utf-8";
+
+    /**
+     * @var string
+     */
+    protected $responseContent = "";
+
+    /**
+     * @var string
+     */
+    protected $format = self::FORMAT_HTML;
 
     /**
      * @var \Throwable 未知异常
      */
     private $exception = null;
-
 
     /**
      * 输出contentTypes集合
@@ -40,13 +54,90 @@ class Response extends \Swoft\Base\Response
     ];
 
     /**
+     * 重定向
+     *
+     * @param string   $url
+     * @param null|int $status
+     * @return mixed
+     */
+    public function redirect($url, $status = null)
+    {
+        $this->swooleResponse->header('Location', (string)$url);
+
+        if (null === $status) {
+            $status = 302;
+        }
+
+        if (null !== $status) {
+            $this->swooleResponse->status((int)$status);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Json 响应
+     *
+     * @param  mixed $data            The data
+     * @param  int   $status          The HTTP status code.
+     * @param  int   $encodingOptions Json encoding options
+     * @throws \RuntimeException
+     * @return static
+     */
+    public function json($data, $status = null, $encodingOptions = 0)
+    {
+        $this->swooleResponse->write($json = json_encode($data, $encodingOptions));
+
+        // Ensure that the json encoding passed successfully
+        if ($json === false) {
+            throw new \RuntimeException(json_last_error_msg(), json_last_error());
+        }
+
+        $this->swooleResponse->header('Content-Type', 'application/json;charset=utf-8');
+
+        if (null !== $status) {
+            $this->swooleResponse->status((int)$status);
+        }
+
+        return $this;
+    }
+
+    /**
      * 显示数据
      */
     public function send()
     {
-        $this->formatContentType();
-        $this->response->status($this->status);
-        $this->response->end($this->responseContent);
+        $response = $this;
+
+        /**
+         * Headers
+         */
+        // Handle Content-Type
+        $response = $response->withAddedHeader('Content-Type', $this->contentTypes[$this->format]);
+        $response = $response->withAddedHeader('Content-Type', 'charset=' . $this->charset);
+        // Write Headers to swoole response
+        $headers = $response->getHeaders();
+        foreach ($headers as $key => $value) {
+            $this->swooleResponse->header($key, implode(';', $value));
+        }
+
+        /**
+         * Cookies
+         */
+        // TODO: handle cookies
+
+        /**
+         * Status Code
+         */
+        $response = $response->withStatus($this->getStatusCode());
+        $this->swooleResponse->status($response->getStatusCode());
+
+        /**
+         * Body
+         */
+        $response = $response->withBody(new SwooleStream($this->responseContent));
+        $this->swooleResponse->end($response->getBody()->getContents());
     }
 
     /**
@@ -57,7 +148,7 @@ class Response extends \Swoft\Base\Response
      */
     public function addHeader(string $name, string $value)
     {
-        $this->response->header($name, $value);
+        $this->swooleResponse->header($name, $value);
     }
 
     /**
@@ -74,20 +165,24 @@ class Response extends \Swoft\Base\Response
      * 设置格式json/html/xml...
      *
      * @param string $format
+     * @return $this
      */
     public function setFormat(string $format)
     {
         $this->format = $format;
+        return $this;
     }
 
     /**
      * charset设置
      *
      * @param string $charset
+     * @return $this
      */
     public function setCharset(string $charset)
     {
         $this->charset = $charset;
+        return $this;
     }
 
     /**
@@ -104,20 +199,24 @@ class Response extends \Swoft\Base\Response
      * 设置异常
      *
      * @param \Throwable $exception 初始化异常
+     * @return $this
      */
     public function setException(\Throwable $exception)
     {
         $this->exception = $exception;
+        return $this;
     }
 
     /**
      * 设置返回内容
      *
      * @param string $responseContent
+     * @return $this
      */
     public function setResponseContent(string $responseContent)
     {
         $this->responseContent = $responseContent;
+        return $this;
     }
 
     /**
@@ -131,18 +230,7 @@ class Response extends \Swoft\Base\Response
      */
     public function addCookie($key, $value, $expire = 0, $path = '/', $domain = '')
     {
-        $this->response->cookie($key, $value, $expire, $path, $domain);
+        $this->swooleResponse->cookie($key, $value, $expire, $path, $domain);
     }
 
-    /**
-     * 格式化contentType
-     */
-    private function formatContentType()
-    {
-        // contentType
-        $contentType = $this->contentTypes[$this->format];
-        $contentType .= ";charset=".$this->charset;
-
-        $this->response->header('Content-Type', $contentType);
-    }
 }

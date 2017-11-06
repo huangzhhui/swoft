@@ -13,7 +13,7 @@ use \Swoft\App;
 App::setAlias('@root', BASE_PATH);
 App::setAlias('@app', '@root/app');
 App::setAlias('@res', '@root/resources');
-App::setAlias('@runtime', '@root/runtime/' . APP_NAME);
+App::setAlias('@runtime', '@root/runtime');
 App::setAlias('@configs', '@root/config');
 App::setAlias('@resources', '@root/resources');
 App::setAlias('@beans', '@configs/beans');
