@@ -2,6 +2,9 @@
 
 namespace Swoft\Web;
 
+use Swoft\Contract\Arrayable;
+use Swoft\Helper\JsonHelper;
+
 /**
  * 响应response
  *
@@ -13,29 +16,6 @@ namespace Swoft\Web;
  */
 class Response extends \Swoft\Base\Response
 {
-    const FORMAT_HTML = 'html';
-    const FORMAT_JSON = 'json';
-    const FORMAT_XML = 'xml';
-
-    /**
-     * @var int
-     */
-    protected $status = 200;
-
-    /**
-     * @var string
-     */
-    protected $charset = "utf-8";
-
-    /**
-     * @var string
-     */
-    protected $responseContent = "";
-
-    /**
-     * @var string
-     */
-    protected $format = self::FORMAT_HTML;
 
     /**
      * @var \Throwable 未知异常
@@ -43,22 +23,11 @@ class Response extends \Swoft\Base\Response
     private $exception = null;
 
     /**
-     * 输出contentTypes集合
-     *
-     * @var array
-     */
-    private $contentTypes = [
-        self::FORMAT_XML => 'text/xml',
-        self::FORMAT_HTML => 'text/html',
-        self::FORMAT_JSON => 'application/json',
-    ];
-
-    /**
      * 重定向
      *
      * @param string   $url
      * @param null|int $status
-     * @return mixed
+     * @return static
      */
     public function redirect($url, $status = null)
     {
@@ -75,6 +44,22 @@ class Response extends \Swoft\Base\Response
         return $this;
     }
 
+    /**
+     * Raw 响应
+     *
+     * @param  mixed $data   The data
+     * @param  int   $status The HTTP status code.
+     * @param string $charset
+     * @return \Swoft\Web\Response when $data not jsonable
+     */
+    public function raw($data, int $status = 200, $charset = 'utf-8'): Response
+    {
+        $response = $this;
+        return $response->withAddedHeader('Content-Type', 'text/plain')
+                        ->withAddedHeader('Content-Type', sprintf('charset=%s', $charset))
+                        ->withContent($data)
+                        ->withStatus($status);
+    }
 
     /**
      * Json 响应
@@ -82,43 +67,41 @@ class Response extends \Swoft\Base\Response
      * @param  mixed $data            The data
      * @param  int   $status          The HTTP status code.
      * @param  int   $encodingOptions Json encoding options
-     * @throws \RuntimeException
-     * @return static
+     * @param string $charset
+     * @return static when $data not jsonable
      */
-    public function json($data, $status = null, $encodingOptions = 0)
+    public function json($data, int $status = 200, int $encodingOptions = 0, $charset = 'utf-8'): Response
     {
-        $this->swooleResponse->write($json = json_encode($data, $encodingOptions));
-
-        // Ensure that the json encoding passed successfully
-        if ($json === false) {
-            throw new \RuntimeException(json_last_error_msg(), json_last_error());
+        if (! is_array($data) && ! is_string($data) && ! $data instanceof Arrayable) {
+            throw new \InvalidArgumentException('Invalid data provided');
         }
+        is_string($data) && $data = ['data' => $data];
 
-        $this->swooleResponse->header('Content-Type', 'application/json;charset=utf-8');
+        $response = $this;
 
-        if (null !== $status) {
-            $this->swooleResponse->status((int)$status);
-        }
+        // Headers
+        $response = $response->withAddedHeader('Content-Type', 'application/json')
+                             ->withAddedHeader('Content-Type', sprintf('charset=%s', $charset));
 
-        return $this;
+        // Content and Status code
+        $content = JsonHelper::encode($data, $encodingOptions);
+        $response = $response->withContent($content)->withStatus($status);
+
+        return $response;
     }
 
     /**
-     * 显示数据
+     * 处理 Response 并发送数据
      */
-    public function send()
+    public function send(): void
     {
         $response = $this;
 
         /**
          * Headers
          */
-        // Handle Content-Type
-        $response = $response->withAddedHeader('Content-Type', $this->contentTypes[$this->format]);
-        $response = $response->withAddedHeader('Content-Type', 'charset=' . $this->charset);
         // Write Headers to swoole response
-        $headers = $response->getHeaders();
-        foreach ($headers as $key => $value) {
+        foreach ($response->getHeaders() as $key => $value) {
             $this->swooleResponse->header($key, implode(';', $value));
         }
 
@@ -128,61 +111,9 @@ class Response extends \Swoft\Base\Response
         // TODO: handle cookies
 
         /**
-         * Status Code
-         */
-        $response = $response->withStatus($this->getStatusCode());
-        $this->swooleResponse->status($response->getStatusCode());
-
-        /**
          * Body
          */
-        $response = $response->withBody(new SwooleStream($this->responseContent));
         $this->swooleResponse->end($response->getBody()->getContents());
-    }
-
-    /**
-     * 添加header
-     *
-     * @param string $name
-     * @param string $value
-     */
-    public function addHeader(string $name, string $value)
-    {
-        $this->swooleResponse->header($name, $value);
-    }
-
-    /**
-     * 设置Http code
-     *
-     * @param int $status
-     */
-    public function setStatus(int $status)
-    {
-        $this->status = $status;
-    }
-
-    /**
-     * 设置格式json/html/xml...
-     *
-     * @param string $format
-     * @return $this
-     */
-    public function setFormat(string $format)
-    {
-        $this->format = $format;
-        return $this;
-    }
-
-    /**
-     * charset设置
-     *
-     * @param string $charset
-     * @return $this
-     */
-    public function setCharset(string $charset)
-    {
-        $this->charset = $charset;
-        return $this;
     }
 
     /**
@@ -199,7 +130,7 @@ class Response extends \Swoft\Base\Response
      * 设置异常
      *
      * @param \Throwable $exception 初始化异常
-     * @return $this
+     * @return static
      */
     public function setException(\Throwable $exception)
     {
@@ -208,15 +139,20 @@ class Response extends \Swoft\Base\Response
     }
 
     /**
-     * 设置返回内容
+     * 设置Body内容，使用默认的Stream
      *
-     * @param string $responseContent
-     * @return $this
+     * @param string $content
+     * @return static
      */
-    public function setResponseContent(string $responseContent)
+    public function withContent($content)
     {
-        $this->responseContent = $responseContent;
-        return $this;
+        if ($this->stream) {
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->stream = new SwooleStream($content);
+        return $new;
     }
 
     /**

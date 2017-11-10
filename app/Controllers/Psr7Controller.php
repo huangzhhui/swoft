@@ -5,6 +5,7 @@ namespace App\Controllers;
 use Psr\Http\Message\UploadedFileInterface;
 use Swoft\Bean\Annotation\AutoController;
 use Swoft\Bean\Annotation\RequestMapping;
+use Swoft\Bean\Annotation\View;
 use Swoft\Web\Controller;
 
 /**
@@ -35,7 +36,7 @@ class Psr7Controller extends Controller
     {
         $param1 = $this->request()->post('param1');
         $param2 = $this->request()->post('param2');
-        return $this->outputJson(compact('param1', 'param2'));
+        return compact('param1', 'param2');
     }
 
     /**
@@ -45,7 +46,7 @@ class Psr7Controller extends Controller
     {
         $param1 = $this->request()->input('param1');
         $param2 = $this->request()->input();
-        return $this->outputJson(compact('param1', 'param2'));
+        return compact('param1', 'param2');
     }
 
     /**
@@ -54,7 +55,7 @@ class Psr7Controller extends Controller
     public function actionRaw()
     {
         $param1 = $this->request()->raw();
-        return $this->outputJson(compact('param1'));
+        return compact('param1');
     }
 
     /**
@@ -64,7 +65,7 @@ class Psr7Controller extends Controller
     public function actionCookies()
     {
         $cookie1 = $this->request()->cookie();
-        return $this->outputJson(compact('cookie1'));
+        return compact('cookie1');
     }
 
     /**
@@ -75,7 +76,7 @@ class Psr7Controller extends Controller
     {
         $header1 = $this->request()->header();
         $header2 = $this->request()->header('host');
-        return $this->outputJson(compact('header1', 'header2'));
+        return compact('header1', 'header2');
     }
 
     /**
@@ -86,7 +87,7 @@ class Psr7Controller extends Controller
     {
         $json = $this->request()->json();
         $jsonParam = $this->request()->json('jsonParam');
-        return $this->outputJson(compact('json', 'jsonParam'));
+        return compact('json', 'jsonParam');
     }
 
     /**
@@ -107,7 +108,27 @@ class Psr7Controller extends Controller
             }
         }
 
-        return $this->outputJson(compact('move'));
+        return compact('move');
+    }
+
+    /**
+     * @RequestMapping()
+     * @View(template="psr7/index", layout="xxx")
+     */
+    public function actionIndex()
+    {
+        $data = [
+            'key1' => 'value1',
+            'key2' => 2,
+        ];
+        $throwException = false;
+        if ($throwException) {
+            // 异常情况由 ExceptionHandler 处理
+            throw new \RuntimeException();
+        }
+        // Data 根据 Request 中的 Accept 返回对应的格式
+        // 正常情况返回 200 状态码，其余状态码由 ExceptionHandler 处理
+        return $data;
     }
 
 }

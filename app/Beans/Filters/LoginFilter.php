@@ -30,8 +30,6 @@ class LoginFilter extends Filter
 
     public function denyFilter(Request $request, Response $response)
     {
-        $response->setResponseContent(json_encode(array('status' => 403, 'msg' => 'need login!')));
-        $response->setFormat(Response::FORMAT_JSON);
-        $response->send();
+        $response->json(array('message' => 'need login!', 403))->send();
     }
 }

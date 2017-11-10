@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use Swoft\App;
+use Swoft\Base\RequestContext;
 use Swoft\Bean\Annotation\AutoController;
 use Swoft\Web\Controller;
 
@@ -32,6 +33,6 @@ class ErrorController extends Controller
         $file = $exception->getFile();
 
         $message .= " " . $file . " " . $line;
-        $this->outputJson("error", $message, $status);
+        return RequestContext::getResponse()->withStatus($status)->withContent(['message' => $message]);
     }
 }

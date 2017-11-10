@@ -3,7 +3,6 @@
 namespace Swoft\Base;
 
 use Swoft\App;
-use Swoft\Helper\ArrayHelper;
 
 /**
  * 基类控制器
@@ -14,8 +13,9 @@ use Swoft\Helper\ArrayHelper;
  * @copyright Copyright 2010-2016 Swoft software
  * @license   PHP Version 7.x {@link http://www.php.net/license/3_0.txt}
  */
-class Controller
+abstract class Controller
 {
+
     /**
      * @var string action方法前缀
      */
@@ -25,55 +25,6 @@ class Controller
      * @var string 默认action
      */
     protected $defaultAction = 'index';
-
-    /**
-     * 执行action
-     *
-     * @param string $actionId action ID
-     * @param array  $params   action调用参数
-     * @return \Swoft\Web\Response 返回response对象
-     */
-    public function run(string $actionId, array $params = []): \Swoft\Web\Response
-    {
-        if (empty($actionId)) {
-            $actionId = $this->defaultAction;
-        }
-        $response = $this->runAction($actionId, $params);
-        if (! $response instanceof Response) {
-            // Detect result of controller and transfer to a Standard Response object
-            $accpet = RequestContext::getRequest()->getHeader('accept');
-            $response = $this->transferResultToResponse($response, $accpet);
-        }
-        if (! ($response instanceof \Swoft\Web\Response)) {
-            $response = RequestContext::getResponse();
-        }
-        return $response;
-    }
-
-    /**
-     * @param mixed $result
-     * @param array $accepts
-     * @return Response
-     */
-    private function transferResultToResponse($result, $accepts = ['*/*'])
-    {
-        $acceptAnything = '*/*';
-        $acceptJson = 'application/json';
-        switch ($result) {
-            case is_string($result) && in_array($acceptJson, $accepts):
-                break;
-            case is_array($result):
-                if (in_array($acceptAnything, $accepts) || in_array($acceptJson, $accepts)) {
-                    $response = RequestContext::getResponse();
-                    $response->setFormat('json')->setResponseContent(json_encode($result));
-                }
-                break;
-            default:
-                $response = RequestContext::getResponse();
-                break;
-        }
-        return $response;
-    }
 
     /**
      * 执行action
@@ -148,36 +99,6 @@ class Controller
     }
 
     /**
-     * get方法参数，等同$_GET
-     *
-     * @param string $name    默认为空，返回所有GEG参数
-     * @param mixed  $default name不为空是有效
-     * @return mixed
-     */
-    protected function get($name = '', $default = null)
-    {
-        if (! empty($name)) {
-            return App::getRequest()->getQueryParameter($name, $default);
-        }
-        return App::getRequest()->getQueryParams();
-    }
-
-    /**
-     * get方法参数，等同$_GET
-     *
-     * @param string $name    默认为空，返回所有GEG参数
-     * @param mixed  $default name不为空是有效
-     * @return mixed
-     */
-    protected function post($name = '', $default = null)
-    {
-        if (! empty($name)) {
-            return App::getRequest()->getPostParameter($name, $default);
-        }
-        return App::getRequest()->getPostParameters();
-    }
-
-    /**
      * 重定向
      *
      * @param string   $url
@@ -198,4 +119,5 @@ class Controller
     {
         return $this->actionPrefix;
     }
+
 }

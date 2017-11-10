@@ -33,8 +33,6 @@ class CommonParamsFilter extends Filter
 
     public function denyFilter(Request $request, Response $response)
     {
-        $response->setResponseContent(json_encode(array('status' => 403, 'msg' => 'common check errro!')));
-        $response->setFormat(Response::FORMAT_JSON);
-        $response->send();
+        $response->json(array('msg' => 'common check errro!', 403))->send();
     }
 }
