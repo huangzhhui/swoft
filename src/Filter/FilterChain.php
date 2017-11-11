@@ -61,8 +61,9 @@ class FilterChain implements IFilter
     /**
      * 获取当前符合条件匹配的filter
      *
-     * @param string $uri 请求uri地址
-     * @param int $currentIndex 过滤器当前index
+     * @param string $uri          请求uri地址
+     * @param int    $currentIndex 过滤器当前index
+     *
      * @return array 返回一个数组，包含filter和index
      */
     private function getCurrentFilter(string $uri, int $currentIndex)

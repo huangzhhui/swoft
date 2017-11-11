@@ -23,6 +23,7 @@ interface IFilter
      * @param Response    $response
      * @param FilterChain $filterChain
      * @param int         $currentIndex
+     *
      * @return bool
      */
     public function doFilter(Request $request, Response $response, FilterChain $filterChain, int $currentIndex = 0);

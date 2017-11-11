@@ -3,7 +3,6 @@
 namespace Swoft\Server;
 
 use Swoft\App;
-use Swoft\Base\Coroutine;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Server;
@@ -65,12 +64,5 @@ class HttpServer extends RpcServer
     public function onRequest(Request $request, Response $response)
     {
         App::getApplication()->doRequest($request, $response);
-        try {
-        } catch (\Throwable $e) {
-            var_dump(Coroutine::id());
-            // TODO: 系统异常处理
-            $response->end($e->getMessage());
-            print_r($e->getMessage() . PHP_EOL . $e->getTraceAsString());
-        }
     }
 }

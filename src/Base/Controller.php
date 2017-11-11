@@ -15,7 +15,6 @@ use Swoft\App;
  */
 abstract class Controller
 {
-
     /**
      * @var string action方法前缀
      */

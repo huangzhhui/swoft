@@ -8,6 +8,7 @@ use Swoft\Base\InitApplicationContext;
 use Swoft\Bean\BeanFactory;
 use Swoft\Event\Event;
 use Swoft\Event\Events\BeforeTaskEvent;
+use Swoft\Helper\ProcessHelper;
 use Swoft\Process\Process;
 use Swoft\Task\Task;
 use Swoole\Server;
@@ -61,7 +62,7 @@ class RpcServer extends AbstractServer
     {
         file_put_contents($this->serverSetting['pfile'], $server->master_pid);
         file_put_contents($this->serverSetting['pfile'], ',' . $server->manager_pid, FILE_APPEND);
-        swoole_set_process_name($this->serverSetting['pname'] . " master process (" . $this->scriptFile . ")");
+        ProcessHelper::setProcessTitle($this->serverSetting['pname'] . " master process (" . $this->scriptFile . ")");
     }
 
     /**
@@ -71,7 +72,7 @@ class RpcServer extends AbstractServer
      */
     public function onManagerStart(Server $server)
     {
-        swoole_set_process_name($this->serverSetting['pname'] . " manager process");
+        ProcessHelper::setProcessTitle($this->serverSetting['pname'] . " manager process");
     }
 
     /**
@@ -82,19 +83,18 @@ class RpcServer extends AbstractServer
      */
     public function onWorkerStart(Server $server, int $workerId)
     {
-        // reload重新加载文件
-        $this->beforeOnWorkerStart($server, $workerId);
-
         // worker和task进程初始化
         $setting = $server->setting;
         if ($workerId >= $setting['worker_num']) {
             ApplicationContext::setContext(ApplicationContext::TASK);
-            swoole_set_process_name($this->serverSetting['pname'] . " task process");
-            return;
+            ProcessHelper::setProcessTitle($this->serverSetting['pname'] . " task process");
+        } else {
+            ApplicationContext::setContext(ApplicationContext::WORKER);
+            ProcessHelper::setProcessTitle($this->serverSetting['pname'] . " worker process");
         }
 
-        ApplicationContext::setContext(ApplicationContext::WORKER);
-        swoole_set_process_name($this->serverSetting['pname'] . " worker process");
+        // reload重新加载文件
+        $this->beforeOnWorkerStart($server, $workerId);
     }
 
     /**
@@ -211,7 +211,7 @@ class RpcServer extends AbstractServer
      */
     public function onFinish(Server $server, int $taskId, $data)
     {
-//        var_dump($data, '----------((((((9999999999');
+        //        var_dump($data, '----------((((((9999999999');
     }
 
     /**
@@ -249,8 +249,10 @@ class RpcServer extends AbstractServer
      */
     private function initCrontabMemoryTable()
     {
-        $taskCount = isset($this->crontabSetting['task_count']) && $this->crontabSetting['task_count'] > 0 ? $this->crontabSetting['task_count'] : null;
-        $taskQueue = isset($this->crontabSetting['task_queue']) && $this->crontabSetting['task_queue'] > 0 ? $this->crontabSetting['task_queue'] : null;
+        $taskCount = isset($this->crontabSetting['task_count']) && $this->crontabSetting['task_count'] > 0 ? $this->crontabSetting['task_count']
+            : null;
+        $taskQueue = isset($this->crontabSetting['task_queue']) && $this->crontabSetting['task_queue'] > 0 ? $this->crontabSetting['task_queue']
+            : null;
 
         TableCrontab::init($taskCount, $taskQueue);
     }

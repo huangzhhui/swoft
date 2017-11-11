@@ -49,6 +49,7 @@ class RequestContext
      * 请求response
      *
      * @param int $cid 协程ID
+     *
      * @return \Swoft\Web\Response
      */
     public static function getResponse($cid = null)
@@ -104,7 +105,7 @@ class RequestContext
      * 设置或修改，当前请求数据共享值
      *
      * @param string $key
-     * @param mixed $val
+     * @param mixed  $val
      */
     public static function setContextDataByKey(string $key, $val)
     {
@@ -116,7 +117,8 @@ class RequestContext
      * 获取当前请求数据一个KEY的值
      *
      * @param string $key
-     * @param mixed $default
+     * @param mixed  $default
+     *
      * @return mixed
      */
     public static function getContextDataByKey(string $key, $default = null)
@@ -138,7 +140,7 @@ class RequestContext
     public static function getLogid()
     {
         $contextData = self::getCoroutineContext(self::COROUTINE_DATA);
-        $logid = $contextData['logid'] ?? "";
+        $logid = $contextData['logid']?? "";
         return $logid;
     }
 
@@ -150,7 +152,7 @@ class RequestContext
     public static function getSpanid()
     {
         $contextData = self::getCoroutineContext(self::COROUTINE_DATA);
-        $spanid = $contextData['spanid'] ?? 0;
+        $spanid = $contextData['spanid']?? 0;
         return $spanid;
     }
 
@@ -168,14 +170,15 @@ class RequestContext
     /**
      * 获取协程上下文
      *
-     * @param string $name 协程KEY
-     * @param int|null $cid 协程ID
+     * @param string   $name 协程KEY
+     * @param int|null $cid  协程ID
+     *
      * @return mixed|null
      */
     private static function getCoroutineContext(string $name, $cid = null)
     {
         $coroutineId = ($cid === null ? self::getcoroutineId() : $cid);
-        if (! isset(self::$coroutineLocal[$coroutineId])) {
+        if (!isset(self::$coroutineLocal[$coroutineId])) {
             return null;
         }
 
