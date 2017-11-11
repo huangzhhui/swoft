@@ -93,6 +93,11 @@ class Response implements ResponseInterface
     private $statusCode = 200;
 
     /**
+     * @var string
+     */
+    private $charset = 'utf-8';
+
+    /**
      * swoole响应请求
      *
      * @var \Swoole\Http\Response
@@ -124,7 +129,7 @@ class Response implements ResponseInterface
      *
      * @return int Status code.
      */
-    public function getStatusCode()
+    public function getStatusCode(): int
     {
         return $this->statusCode;
     }
@@ -147,7 +152,7 @@ class Response implements ResponseInterface
      * @return static
      * @throws \InvalidArgumentException For invalid status code arguments.
      */
-    public function withStatus($code, $reasonPhrase = '')
+    public function withStatus($code, $reasonPhrase = ''): self
     {
         $clone = clone $this;
         $clone->statusCode = (int)$code;
@@ -155,6 +160,30 @@ class Response implements ResponseInterface
             $reasonPhrase = self::$phrases[$code];
         }
         $clone->reasonPhrase = $reasonPhrase;
+        return $clone;
+    }
+
+    /**
+     * Return the reason phrase by code
+     *
+     * @param $code
+     * @return string
+     */
+    public static function getReasonPhraseByCode($code): string
+    {
+        return self::$phrases[$code] ?? '';
+    }
+
+    /**
+     * Return an instance with the specified charset content type.
+     *
+     * @param $charset
+     * @return static
+     */
+    public function withCharset($charset): self
+    {
+        $clone = clone $this;
+        $clone->withAddedHeader('Content-Type', sprintf('charset=%s', $charset));
         return $clone;
     }
 
@@ -170,9 +199,27 @@ class Response implements ResponseInterface
      * @link http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
      * @return string Reason phrase; must return an empty string if none present.
      */
-    public function getReasonPhrase()
+    public function getReasonPhrase(): string
     {
         return $this->reasonPhrase;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCharset(): string
+    {
+        return $this->charset;
+    }
+
+    /**
+     * @param string $charset
+     * @return Response
+     */
+    public function setCharset(string $charset): Response
+    {
+        $this->charset = $charset;
+        return $this;
     }
 
 }

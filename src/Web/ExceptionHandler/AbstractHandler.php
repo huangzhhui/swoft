@@ -3,7 +3,7 @@
 namespace Swoft\Web\ExceptionHandler;
 
 use Swoft\Base\RequestContext;
-use Swoft\Base\Response;
+use Swoft\Web\Response;
 
 /**
  * @uses      AbstractHandler
@@ -27,7 +27,7 @@ abstract class AbstractHandler
      *
      * @var string
      */
-    protected $message = 'System error';
+    protected $message = '';
 
     /**
      * @var \Throwable
@@ -44,7 +44,7 @@ abstract class AbstractHandler
     /**
      * handle the exception and return a Response
      *
-     * @return \Swoft\Base\Response|string|array|mixed
+     * @return \Swoft\Web\Response
      */
     abstract public function handle();
 
@@ -53,21 +53,22 @@ abstract class AbstractHandler
      *
      * @return array
      */
-    protected function handleBody()
+    protected function handleBody(): array
     {
         return [
-            'message' => $this->getMessage(),
+            'message' => $this->getMessage() ? : Response::getReasonPhraseByCode($this->getStatusCode()),
         ];
     }
 
     /**
      * Transfer current instance to a Response
      *
-     * @return \Swoft\Base\Response
+     * @return \Swoft\Web\Response
      */
-    protected function toResponse()
+    public function toResponse(): Response
     {
-        return RequestContext::getResponse()->withContent($this->handleBody())->withStatus($this->getStatusCode());
+        $response = clone RequestContext::getResponse();
+        return $response->setException($this->getException())->auto($this->handleBody(), $this->getStatusCode());
     }
 
     /**

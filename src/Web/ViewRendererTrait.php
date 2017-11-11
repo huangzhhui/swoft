@@ -8,6 +8,7 @@
 
 namespace Swoft\Web;
 
+use Swoft\App;
 use Swoft\Base\RequestContext;
 
 /**
@@ -27,7 +28,10 @@ trait ViewRendererTrait
      *
      * @return ViewRenderer
      */
-    abstract public function getRenderer();
+    public function getRenderer()
+    {
+        return App::getBean('renderer');
+    }
 
     /**
      * @param string $view

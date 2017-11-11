@@ -2,9 +2,8 @@
 
 namespace Swoft\Web;
 
-use Swoft\App;
 use Swoft\Base\RequestContext;
-use Swoft\Web\ExceptionHandler\AbstractHandler;
+use Swoft\Web\ExceptionHandler\ExceptionHandlerManager;
 use Swoft\Web\ResponseTransformer\AbstractTransformer;
 use Swoft\Web\ResponseTransformer\ArrayableJsonTransformer;
 use Swoft\Web\ResponseTransformer\RawTransformer;
@@ -22,40 +21,6 @@ use Swoft\Web\ResponseTransformer\ViewTransformer;
  */
 abstract class Controller extends \Swoft\Base\Controller
 {
-    use ViewRendererTrait;
-
-    /**
-     * @var array
-     */
-    protected $defaultTransformers = [
-        ViewTransformer::class => 4,
-        StringJsonTransformer::class => 3,
-        ArrayableJsonTransformer::class => 2,
-        RawTransformer::class => 1,
-    ];
-
-    protected $defaultExceptionHandlers = [
-
-    ];
-
-    /**
-     * @var \SplPriorityQueue
-     */
-    protected $transformerQueue;
-
-    /**
-     * @var \SplPriorityQueue
-     */
-    protected $exceptionHandlerQueue;
-
-    /**
-     * Controller constructor.
-     */
-    public function __construct()
-    {
-        $this->transformerQueue = new \SplPriorityQueue();
-        $this->exceptionHandlerQueue = new \SplPriorityQueue();
-    }
 
     /**
      * @return \Swoft\Web\Request
@@ -71,25 +36,6 @@ abstract class Controller extends \Swoft\Base\Controller
     public function response(): Response
     {
         return RequestContext::getResponse();
-    }
-
-    /**
-     * getRenderer
-     *
-     * @return ViewRenderer
-     */
-    public function getRenderer()
-    {
-        return App::getBean('renderer');
-    }
-
-    /**
-     * @param string $view
-     * @return string
-     */
-    protected function resolveView(string $view)
-    {
-        return App::getAlias($view);
     }
 
     /**
@@ -109,60 +55,17 @@ abstract class Controller extends \Swoft\Base\Controller
             $response = $this->runAction($actionId, $params);
         } catch (\Throwable $t) {
             // Handle by ExceptionHandler
-            while ($this->transformerQueue->valid()) {
-                $current = $this->transformerQueue->current();
-                $instance = new $current();
-                if ($instance instanceof AbstractHandler) {
-                    $instance->setException($t);
-                    if ($instance->isHandle()) {
-                        $response = $instance->handle();
-                        break;
-                    }
-                }
-                $this->transformerQueue->next();
-            }
+            $response = ExceptionHandlerManager::handle($t);
         } finally {
-            if (! $response instanceof \Swoft\Base\Response) {
-                // Detect result of controller and transfer to a Standard Response object
-                $accpet = $this->request()->getHeader('accept');
-                $this->addDefaultTransformer();
-                $response = $this->transferResultToResponse($response, current($accpet));
+            if (! $response instanceof Response) {
+                /**
+                 * If $response is not instance of Response,
+                 * usually return by Action of Controller,
+                 * then the auto() method will format the result
+                 * and return a suitable response
+                 */
+                $response = RequestContext::getResponse()->auto($response);
             }
-        }
-        return $response;
-    }
-
-    /**
-     * Add framework default transformers to queue
-     */
-    protected function addDefaultTransformer()
-    {
-        foreach ($this->defaultTransformers as $transformer => $priority) {
-            $this->transformerQueue->insert($transformer, $priority);
-        }
-    }
-
-    /**
-     * Walk the transformer queue to select a suitable Transformer handle
-     * the action result, after this, the method will always return a Response
-     *
-     * @param mixed  $result
-     * @param string $accept
-     * @return Response
-     */
-    protected function transferResultToResponse($result, string $accept = '*/*'): Response
-    {
-        while ($this->transformerQueue->valid()) {
-            $current = $this->transformerQueue->current();
-            $instance = new $current();
-            if ($instance instanceof AbstractTransformer) {
-                $instance->setResult($result)->setAccept($accept)->setControllerClass(static::class);
-                if ($instance->isMatch()) {
-                    $response = $instance->transfer();
-                    break;
-                }
-            }
-            $this->transformerQueue->next();
         }
         return $response;
     }

@@ -86,8 +86,6 @@ class Console implements IConsole
         $this->registerNamespace();
         $this->input = new Input();
         $this->output = new Output();
-        $this->errorHandler = new ErrorHandler();
-        $this->errorHandler->register();
     }
 
     /**

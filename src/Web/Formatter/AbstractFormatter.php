@@ -2,6 +2,7 @@
 
 namespace Swoft\Web\ResponseTransformer;
 
+use Swoft\Base\RequestContext;
 use Swoft\Web\Response;
 
 /**
@@ -11,7 +12,7 @@ use Swoft\Web\Response;
  * @copyright Copyright 2010-2017 Swoft software
  * @license   PHP Version 7.x {@link http://www.php.net/license/3_0.txt}
  */
-abstract class AbstractTransformer
+abstract class AbstractFormatter
 {
 
     /**
@@ -35,9 +36,9 @@ abstract class AbstractTransformer
     abstract public function isMatch(): bool;
 
     /**
-     * @return \Swoft\Web\Response
+     * @return Response
      */
-    abstract public function transfer(): Response;
+    abstract public function format(): Response;
 
     /**
      * @return string
@@ -92,4 +93,13 @@ abstract class AbstractTransformer
         $this->accept = $accept;
         return $this;
     }
+
+    /**
+     * @return Response
+     */
+    public function getResponse(): Response
+    {
+        return RequestContext::getResponse();
+    }
+
 }

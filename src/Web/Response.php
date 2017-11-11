@@ -2,8 +2,11 @@
 
 namespace Swoft\Web;
 
+use Swoft\Base\RequestContext;
+use Swoft\Bean\Collector;
 use Swoft\Contract\Arrayable;
 use Swoft\Helper\JsonHelper;
+use Swoft\Helper\StringHelper;
 
 /**
  * 响应response
@@ -17,10 +20,12 @@ use Swoft\Helper\JsonHelper;
 class Response extends \Swoft\Base\Response
 {
 
+    use ViewRendererTrait;
+
     /**
-     * @var \Throwable 未知异常
+     * @var \Throwable|null
      */
-    private $exception = null;
+    protected $exception;
 
     /**
      * 重定向
@@ -45,48 +50,105 @@ class Response extends \Swoft\Base\Response
     }
 
     /**
-     * Raw 响应
+     * return a View format response
      *
-     * @param  mixed $data   The data
-     * @param  int   $status The HTTP status code.
-     * @param string $charset
-     * @return \Swoft\Web\Response when $data not jsonable
+     * @param array $data
+     * @return \Swoft\Web\Response
      */
-    public function raw($data, int $status = 200, $charset = 'utf-8'): Response
+    public function view($data = []): Response
     {
-        $response = $this;
-        return $response->withAddedHeader('Content-Type', 'text/plain')
-                        ->withAddedHeader('Content-Type', sprintf('charset=%s', $charset))
-                        ->withContent($data)
-                        ->withStatus($status);
+        $controllerClass = RequestContext::getContextData('controllerClass');
+        $template = Collector::$requestMapping[$controllerClass]['view']['template'] ?? null;
+        $layout = Collector::$requestMapping[$controllerClass]['view']['layout'] ?? null;
+        $response = $this->render($template, $data, $layout);
+        return $response;
     }
 
     /**
-     * Json 响应
+     * return a Raw format response
+     *
+     * @param  mixed $data   The data
+     * @param  int   $status The HTTP status code.
+     * @return \Swoft\Web\Response when $data not jsonable
+     */
+    public function raw($data = [], int $status = 200): Response
+    {
+        $response = $this;
+
+        // Headers
+        $response = $response->withoutHeader('Content-Type')->withAddedHeader('Content-Type', 'text/plain');
+        $this->getCharset() && $response = $response->withCharset($this->getCharset());
+
+        // Content
+        $data && $response = $response->withContent($data);
+
+        // Status code
+        $status && $response = $response->withStatus($status);
+
+        return $response;
+    }
+
+    /**
+     * return a Json format response
      *
      * @param  mixed $data            The data
      * @param  int   $status          The HTTP status code.
      * @param  int   $encodingOptions Json encoding options
-     * @param string $charset
      * @return static when $data not jsonable
      */
-    public function json($data, int $status = 200, int $encodingOptions = 0, $charset = 'utf-8'): Response
+    public function json($data = [], int $status = 200, int $encodingOptions = 0): Response
     {
-        if (! is_array($data) && ! is_string($data) && ! $data instanceof Arrayable) {
-            throw new \InvalidArgumentException('Invalid data provided');
-        }
-        is_string($data) && $data = ['data' => $data];
-
         $response = $this;
 
         // Headers
-        $response = $response->withAddedHeader('Content-Type', 'application/json')
-                             ->withAddedHeader('Content-Type', sprintf('charset=%s', $charset));
+        $response = $response->withoutHeader('Content-Type')->withAddedHeader('Content-Type', 'application/json');
+        $this->getCharset() && $response = $response->withCharset($this->getCharset());
 
-        // Content and Status code
-        $content = JsonHelper::encode($data, $encodingOptions);
-        $response = $response->withContent($content)->withStatus($status);
+        // Content
+        if ($data && (is_array($data) || is_string($data) || $data instanceof Arrayable)) {
+            is_string($data) && $data = ['data' => $data];
+            $content = JsonHelper::encode($data, $encodingOptions);
+            $response = $response->withContent($content);
+        } else {
+            $response = $response->withContent('{}');
+        }
 
+        // Status code
+        $status && $response = $response->withStatus($status);
+
+        return $response;
+    }
+
+    /**
+     * return an automatic detection format response
+     *
+     * @param mixed $data
+     * @param int   $status
+     * @return static
+     */
+    public function auto($data = null, int $status = 200): Response
+    {
+        $accepts = RequestContext::getRequest()->getHeader('accept');
+        $currentAccept = current($accepts);
+        $controllerClass = RequestContext::getContextDataByKey('controllerClass');
+        $template = Collector::$requestMapping[$controllerClass]['view']['template'] ?? null;
+        $matchViewModel = StringHelper::contains($currentAccept, 'text/html') === true && $controllerClass && is_array($data) && $template && ! $this->getException();
+        switch ($currentAccept) {
+            // View
+            case $matchViewModel === true:
+                $response = $this->view($data, $status);
+                break;
+            // Json
+            case StringHelper::contains($currentAccept, 'application/json') === true:
+            case is_array($data) || $data instanceof Arrayable:
+                is_string($data) && $data = compact('data');
+                $response = $this->json($data, $status);
+                break;
+            // Raw
+            default:
+                $response = $this->raw((string)$data, $status);
+                break;
+        }
         return $response;
     }
 
@@ -111,31 +173,14 @@ class Response extends \Swoft\Base\Response
         // TODO: handle cookies
 
         /**
+         * Status code
+         */
+        $this->swooleResponse->status($response->getStatusCode());
+
+        /**
          * Body
          */
         $this->swooleResponse->end($response->getBody()->getContents());
-    }
-
-    /**
-     * 获取异常
-     *
-     * @return \Throwable 异常
-     */
-    public function getException(): \Throwable
-    {
-        return $this->exception;
-    }
-
-    /**
-     * 设置异常
-     *
-     * @param \Throwable $exception 初始化异常
-     * @return static
-     */
-    public function setException(\Throwable $exception)
-    {
-        $this->exception = $exception;
-        return $this;
     }
 
     /**
@@ -144,7 +189,7 @@ class Response extends \Swoft\Base\Response
      * @param string $content
      * @return static
      */
-    public function withContent($content)
+    public function withContent($content): Response
     {
         if ($this->stream) {
             return $this;
@@ -167,6 +212,24 @@ class Response extends \Swoft\Base\Response
     public function addCookie($key, $value, $expire = 0, $path = '/', $domain = '')
     {
         $this->swooleResponse->cookie($key, $value, $expire, $path, $domain);
+    }
+
+    /**
+     * @return null|\Throwable
+     */
+    public function getException()
+    {
+        return $this->exception;
+    }
+
+    /**
+     * @param \Throwable $exception
+     * @return $this
+     */
+    public function setException(\Throwable $exception)
+    {
+        $this->exception = $exception;
+        return $this;
     }
 
 }
