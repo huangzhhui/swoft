@@ -28,7 +28,7 @@ abstract class AbstractTestCase extends \Swoft\Test\AbstractTestCase
      * @param string $accept
      * @return bool|\Swoft\Testing\Web\Response
      */
-    public function request($method, $uri, $parameters = [], $accept = self::ACCEPT_JSON)
+    public function request(string  $method, string  $uri, array $parameters = [], string $accept = self::ACCEPT_JSON)
     {
         $method = strtoupper($method);
         $swooleResponse = new TestSwooleResponse();
