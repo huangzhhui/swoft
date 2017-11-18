@@ -14,7 +14,8 @@ use Swoft\Web\Controller;
  * 多个 Middleware
  * @Middlewares({
  *     @Middleware(class="\Swoft\Web\Middlewares\GroupTestMiddleware"),
- *     @Middleware(class="Swoft\Web\Middlewares\GroupTestMiddleware")
+ *     @Middleware(class="Swoft\Web\Middlewares\GroupTestMiddleware"),
+ *     @Middleware(class="Swoft\Web\Middlewares\SubMiddlewares")
  * })
  * 单个 Middleware
  * @Middleware(class="Swoft\Web\Middlewares\GroupTestMiddleware")

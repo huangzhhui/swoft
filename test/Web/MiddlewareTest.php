@@ -22,5 +22,6 @@ class MiddlewareTest extends AbstractTestCase
         $response->assertSuccessful()->assertHeader('X-Powered-By', 'Swoft');
         $response->assertSuccessful()->assertHeader('Middleware-Group-Test');
         $response->assertSuccessful()->assertHeader('Middleware-Action-Test');
+        $response->assertSuccessful()->assertHeader('Sub-Middleware-Test');
     }
 }
