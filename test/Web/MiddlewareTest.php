@@ -18,7 +18,9 @@ class MiddlewareTest extends AbstractTestCase
      */
     public function dispatchController()
     {
-        $response = $this->request('GET', '/middleware/test', [], parent::ACCEPT_JSON);
+        $response = $this->request('GET', '/middleware/testMiddlewares', [], parent::ACCEPT_JSON);
         $response->assertSuccessful()->assertHeader('X-Powered-By', 'Swoft');
+        $response->assertSuccessful()->assertHeader('Middleware-Group-Test');
+        $response->assertSuccessful()->assertHeader('Middleware-Action-Test');
     }
 }

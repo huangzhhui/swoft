@@ -3,15 +3,21 @@
 namespace App\Controllers;
 
 use Swoft\Bean\Annotation\AutoController;
-use Swoft\Bean\Annotation\Inject;
 use Swoft\Bean\Annotation\Middleware;
+use Swoft\Bean\Annotation\Middlewares;
 use Swoft\Bean\Annotation\RequestMapping;
-use Swoft\Pipeline\Pipeline;
 use Swoft\Web\Controller;
 
 
 /**
  * @AutoController(prefix="/middleware")
+ * 多个 Middleware
+ * @Middlewares({
+ *     @Middleware(class="\Swoft\Web\Middlewares\GroupTestMiddleware"),
+ *     @Middleware(class="Swoft\Web\Middlewares\GroupTestMiddleware")
+ * })
+ * 单个 Middleware
+ * @Middleware(class="Swoft\Web\Middlewares\GroupTestMiddleware")
  *
  * @uses      MiddlewareController
  * @version   2017年11月14日
@@ -23,16 +29,18 @@ class MiddlewareController extends Controller
 {
 
     /**
-     * @Inject()
-     * @var \Swoft\Web\Dispatcher
-     */
-    protected $dispatcher;
-
-    /**
      * @RequestMapping()
-     * @Middleware(class="\Swoft\Web\Middlewares\TestMiddleware")
+     * 多个 Middleware
+     * @Middlewares({
+     *     @Middleware(class="\Swoft\Web\Middlewares\ActionTestMiddleware"),
+     *     @Middleware(class="Swoft\Web\Middlewares\ActionTestMiddleware")
+     * })
+     * 单个 Middleware
+     * @Middleware(class="Swoft\Web\Middlewares\ActionTestMiddleware")
+     *
+     * @return string
      */
-    public function actionTest()
+    public function actionTestMiddlewares()
     {
         return 'success';
     }
