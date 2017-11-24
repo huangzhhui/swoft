@@ -5,17 +5,16 @@ namespace App\Controllers;
 use App\Models\Logic\IndexLogic;
 use Swoft\App;
 use Swoft\Base\Coroutine;
-use Swoft\Bean\Annotation\AutoController;
+use Swoft\Bean\Annotation\Controller;
 use Swoft\Bean\Annotation\Inject;
 use Swoft\Bean\Annotation\RequestMapping;
 use Swoft\Bean\Annotation\RequestMethod;
 use Swoft\Bean\Annotation\View;
 use Swoft\Task\Task;
-use Swoft\Web\Controller;
 
 /**
  * 控制器demo
- * @AutoController(prefix="/demo2")
+ * @Controller(prefix="/demo2")
  *
  * @uses      DemoController
  * @version   2017年08月22日
@@ -23,7 +22,7 @@ use Swoft\Web\Controller;
  * @copyright Copyright 2010-2016 Swoft software
  * @license   PHP Version 7.x {@link http://www.php.net/license/3_0.txt}
  */
-class DemoController extends Controller
+class DemoController extends \Swoft\Web\Controller
 {
     /**
      * 注入逻辑层

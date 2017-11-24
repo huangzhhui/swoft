@@ -3,19 +3,18 @@
 namespace App\Controllers;
 
 use Psr\Http\Message\UploadedFileInterface;
-use Swoft\Bean\Annotation\AutoController;
+use Swoft\Bean\Annotation\Controller;
 use Swoft\Bean\Annotation\RequestMapping;
-use Swoft\Web\Controller;
 
 /**
- * @AutoController(prefix="/psr7")
+ * @Controller(prefix="/psr7")
  * @uses      Psr7Controller
  * @version   2017-11-05
  * @author    huangzhhui <huangzhwork@gmail.com>
  * @copyright Copyright 2010-2017 Swoft software
  * @license   PHP Version 7.x {@link http://www.php.net/license/3_0.txt}
  */
-class Psr7Controller extends Controller
+class Psr7Controller extends \Swoft\Web\Controller
 {
 
     /**
