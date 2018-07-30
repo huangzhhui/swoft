@@ -11,6 +11,7 @@
 [![Hiredis Version](https://img.shields.io/badge/hiredis-%3E=0.1-brightgreen.svg?maxAge=2592000)](https://github.com/redis/hiredis)
 [![Swoft Doc](https://img.shields.io/badge/docs-passing-green.svg?maxAge=2592000)](https://doc.swoft.org)
 [![Swoft License](https://img.shields.io/hexpm/l/plug.svg?maxAge=2592000)](https://github.com/swoft-cloud/swoft/blob/master/LICENSE)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fhuangzhhui%2Fswoft.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fhuangzhhui%2Fswoft?ref=badge_shield)
 
 **[中文说明](README_CN.md)**
 
@@ -211,3 +212,6 @@ php bin/swoft rpc:stop
 ## License
 
 Swoft is an open-source software licensed under the [LICENSE](LICENSE)
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fhuangzhhui%2Fswoft.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fhuangzhhui%2Fswoft?ref=badge_large)
